@@ -210,7 +210,7 @@ function decode_tfields(buf, tree)
                     else
                         local vreader = fieldtype_readers[vtype_str]
                         val = vreader(tbuf)
-                        child_tree:add(buf(pos, tbuf.pos-pos), key, val)
+                        child_tree:add(buf(fieldpos, tbuf.pos-fieldpos), key, val)
                     end
                 end
             end
@@ -279,8 +279,6 @@ function tbinary_protocol.dissector(buffer, pinfo, tree)
         print("non-versioned tbinary protocol unimplemented")
     end
 
-    -- TODO(eac): handle exceptions
-
     decode_tfields(buffer(tbuf.pos, buffer:len()-tbuf.pos), tree)
 end
 
@@ -288,8 +286,7 @@ end
 --- root theader dissector. will dissect a framed theader message, chaining
 --- the payload into the tbinary dissector
 function theader_protocol.dissector(buffer, pinfo, tree)
-    local length = buffer:len()
-    if length == 0 then return end
+    if buffer:len() == 0 then return end
 
     pinfo.cols.protocol = theader_protocol.name
 
@@ -308,7 +305,7 @@ function theader_protocol.dissector(buffer, pinfo, tree)
     local tb = ThriftBuffer:new(framebuf)
     local version = framebuf(0, 4):int()
     if bit32.rshift(version, 16) == THRIFT_HEADER_MAGIC then
-        local flags, seq_id, header_length, end_of_headers protocol_id, transform_count, len = nil
+        local flags, seq_id, header_length, end_of_headers, protocol_id, transform_count = nil
         tb:seek(2)
 
         flags = tb(2):uint()
@@ -322,18 +319,15 @@ function theader_protocol.dissector(buffer, pinfo, tree)
         -- TODO(eac): try to implement the gzip transform?
         local transforms = {}
         for i = 1, transform_count do
-            local transform_id
-            transform_id = tb:varint()
+            local transform_id = tb:varint()
             table.insert(transforms, transform_id)
         end
 
         local headers_tree = subtree:add(framebuf(tb.pos, header_length), "Headers")
         while tb.pos < end_of_headers do
-            local header_type = nil
-            header_type = tb:varint()
+            local header_type = tb:varint()
             if header_type == THRIFT_HEADER_TYPE_KV then
-                local count = nil
-                count = tb:varint()
+                local count = tb:varint()
                 for i = 1, count do
                     local header_start = tb.pos
                     local key = tb:varstring()
