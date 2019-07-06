@@ -1,7 +1,17 @@
 -------------------------------------------------------------------------------
+-- wireshark-thrift-dissector
+-- This code is licensed under MIT license (see LICENSE for details)
+--
+-------------------------------------------------------------------------------
+--- configuration
+local default_settings = {
+    port = 9090,
+}
+
+-------------------------------------------------------------------------------
 --- protocols
-theader_protocol = Proto("theader", "Thrift Header Protocol")
-tbinary_protocol = Proto("tbinary", "Thrift Binary Protocol")
+local theader_protocol = Proto("theader", "Thrift Header Protocol")
+local tbinary_protocol = Proto("tbinary", "Thrift Binary Protocol")
 
 -------------------------------------------------------------------------------
 --- lookup tables
@@ -136,7 +146,6 @@ local fieldtype_readers = {
     I64 = ThriftBuffer.i64,
     STRING = ThriftBuffer.string,
 }
-
 
 -------------------------------------------------------------------------------
 --- decodes a series of thrift fields until the STOP sentinel is reached
@@ -357,5 +366,4 @@ end
 
 -------------------------------------------------------------------------------
 --- dissector registration
-local tcp_port = DissectorTable.get("tcp.port")
-tcp_port:add(9090, theader_protocol)
+DissectorTable.get("tcp.port"):add(default_settings.port, theader_protocol)
