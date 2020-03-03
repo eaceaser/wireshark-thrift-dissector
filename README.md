@@ -18,6 +18,8 @@ Currently, you can edit the `default-settings` table in `thrift-generic.lua`
 
 `wireshark -X lua_script:thrift-generic.lua path/to/your/capture.pcap`
 
+This plugin can also be installed in [a plugin folder](https://www.wireshark.org/docs/wsug_html_chunked/ChPluginFolders.html) to make it available without passing `-X`.
+
 By default, port 9090 will be dissected. You can add additional ports with `Decode as...`, or change `default_port` in
 the configuration.
 
